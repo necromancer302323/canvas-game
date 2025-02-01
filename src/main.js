@@ -23,9 +23,7 @@ socket.onopen = function () {
 };
 socket.onmessage = function (message) {
   const data = JSON.parse(message.data);
-  console.log(data);
   if (data.event === "acknowledged") {
-    const data = JSON.parse(message.data);
     const { userId } = data.data;
     addCurrentUserPlayer({ userId });
   }
@@ -47,22 +45,31 @@ let hero = null;
 
 const heroPos = new Vector2(16 * 6, 16 * 5);
 const input = new Input();
+
+
 function update() {
+  const positionData = {
+    event: "position",
+    data: {
+      x: heroPos.x,
+      y: heroPos.y,
+    },
+  };
   if (input.direction === DOWN) {
     heroPos.y += 1;
-    socket.send(JSON.stringify(heroPos));
+    socket.send(JSON.stringify(positionData));
   }
   if (input.direction === UP) {
     heroPos.y -= 1;
-    socket.send(JSON.stringify(heroPos));
+    socket.send(JSON.stringify(positionData));
   }
   if (input.direction === LEFT) {
     heroPos.x -= 1;
-    socket.send(JSON.stringify(heroPos));
+    socket.send(JSON.stringify(positionData));
   }
   if (input.direction === RIGHT) {
     heroPos.x += 1;
-    socket.send(JSON.stringify(heroPos));
+    socket.send(JSON.stringify(positionData));
   }
 }
 
