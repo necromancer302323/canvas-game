@@ -1,6 +1,6 @@
 class Resources {
     constructor(){
-        this.toLoad={
+         this.toLoad={
             hero:"/sprites/hero-sheet.png",
             ground:"/sprites/ground.png",
             shadow:"/sprites/shadow.png",
