@@ -23,6 +23,7 @@ socket.onopen = function () {
 };
 socket.onmessage = function (message) {
   const data = JSON.parse(message.data);
+  console.log(data)
   if (data.event === "acknowledged") {
     const { userId } = data.data;
     addCurrentUserPlayer({ userId });
@@ -72,6 +73,8 @@ function update() {
     socket.send(JSON.stringify(positionData));
   }
 }
+
+
 
 function draw() {
   skySprite.drawImage(ctx, 0, 0);
