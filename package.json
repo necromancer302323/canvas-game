@@ -10,5 +10,9 @@
   },
   "devDependencies": {
     "vite": "^6.0.5"
+  },
+  "dependencies": {
+    "@types/ws": "^8.5.14",
+    "ws": "^8.18.0"
   }
 }

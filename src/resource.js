@@ -5,6 +5,7 @@ class Resources {
             ground:"/sprites/ground.png",
             shadow:"/sprites/shadow.png",
             sky:"/sprites/sky.png",
+            rod:"/sprites/rod.png"
         }
         this.images={}
 
