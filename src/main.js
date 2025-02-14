@@ -10,25 +10,51 @@ const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
 
 const socket = new WebSocket("ws://localhost:8080");
+let playersList = [];
 
-const joinRoomData = {
-  event: "join",
-  data: {
-    roomId: "room1",
-  },
-};
 socket.onopen = function () {
+  const joinRoomData = {
+    event: "join",
+    data: {
+      roomId: "room1",
+    },
+  };
   console.log("connected to websocket");
   socket.send(JSON.stringify(joinRoomData));
 };
+let userId=1
 socket.onmessage = function (message) {
   const data = JSON.parse(message.data);
   console.log(data)
   if (data.event === "acknowledged") {
-    const { userId } = data.data;
-    addCurrentUserPlayer({ userId });
+    userId=data.data.userId
+    addCurrentUserPlayer( data.data.userId );
+    if (data.playerList != []) {
+
+      data.playerList.forEach((users) => {
+        if(users.id!=data.data.userId){
+        playersList.push({
+          userId: users.id,
+          player: new Sprite({
+            resource: resources.images.hero,
+            frameSize: new Vector2(32, 32),
+            hFrames: 3,
+            vFrames: 8,
+            frame: 1,
+          }),
+        });
+    }});
+    }
+  }
+  if(data.event=== "userLeft"){
+    playersList=data.playerList
   }
 };
+socket.onclose = function (){
+  playersList.filter((user)=>{
+    user.userId!=userId
+  })
+}
 
 const skySprite = new Sprite({
   resource: resources.images.sky,
@@ -42,11 +68,11 @@ const shadow = new Sprite({
   resource: resources.images.shadow,
   frameSize: new Vector2(32, 32),
 });
+
 let hero = null;
 
 const heroPos = new Vector2(16 * 6, 16 * 5);
 const input = new Input();
-
 
 function update() {
   const positionData = {
@@ -74,12 +100,9 @@ function update() {
   }
 }
 
-
-
 function draw() {
   skySprite.drawImage(ctx, 0, 0);
   groundSprite.drawImage(ctx, 0, 0);
-
   const heroOffset = new Vector2(-8, -21);
   const heroPosX = heroPos.x + heroOffset.x;
   const heroPosY = heroPos.y + heroOffset.y;
@@ -99,6 +122,7 @@ function addCurrentUserPlayer(userId) {
     }),
     userId: userId,
   };
+  playersList.push({ userId, player: hero.character });
 }
 
 const gameLoop = new GameLoop(update, draw);
