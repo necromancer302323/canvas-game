@@ -10,52 +10,7 @@ const canvas = document.querySelector("#game-canvas");
 const ctx = canvas.getContext("2d");
 
 const socket = new WebSocket("ws://localhost:8080");
-let playersList = [];
-
-socket.onopen = function () {
-  const joinRoomData = {
-    event: "join",
-    data: {
-      roomId: "room1",
-    },
-  };
-  console.log("connected to websocket");
-  socket.send(JSON.stringify(joinRoomData));
-};
-let userId=1
-socket.onmessage = function (message) {
-  const data = JSON.parse(message.data);
-  console.log(data)
-  if (data.event === "acknowledged") {
-    userId=data.data.userId
-    addCurrentUserPlayer( data.data.userId );
-    if (data.playerList != []) {
-
-      data.playerList.forEach((users) => {
-        if(users.id!=data.data.userId){
-        playersList.push({
-          userId: users.id,
-          player: new Sprite({
-            resource: resources.images.hero,
-            frameSize: new Vector2(32, 32),
-            hFrames: 3,
-            vFrames: 8,
-            frame: 1,
-          }),
-        });
-    }});
-    }
-  }
-  if(data.event=== "userLeft"){
-    playersList=data.playerList
-  }
-};
-socket.onclose = function (){
-  playersList.filter((user)=>{
-    user.userId!=userId
-  })
-}
-
+const playersList = [];
 const skySprite = new Sprite({
   resource: resources.images.sky,
   frameSize: new Vector2(320, 180),
@@ -73,6 +28,70 @@ let hero = null;
 
 const heroPos = new Vector2(16 * 6, 16 * 5);
 const input = new Input();
+
+socket.onopen = function () {
+  const joinRoomData = {
+    event: "join",
+    data: {
+      roomId: "room1",
+    },
+  };
+  console.log("connected to websocket");
+  socket.send(JSON.stringify(joinRoomData));
+};
+socket.onmessage = function (message) {
+  const data = JSON.parse(message.data);
+  console.log(data)
+  if (data.event === "acknowledged") {
+    addCurrentUserPlayer( data.data.userId,data.data.userPosition );
+    if (data.playerList != []) {
+      data.playerList.forEach((users) => {
+        if(users.id!=data.data.userId){
+        playersList.push({
+          userId: users.id,
+          player: new Sprite({
+            resource: resources.images.hero,
+            frameSize: new Vector2(32, 32),
+            hFrames: 3,
+            vFrames: 8,
+            frame: 1,
+          }),
+          userPosition:data.userPosition
+        });
+    }});
+    }
+  }
+  if(data.event=="position-update"){
+    function findingWhichPlayerMoved(user){
+      return user.userId==data.data.userId
+    }
+   const movedPlayer=playersList.findIndex(findingWhichPlayerMoved)
+   playersList[movedPlayer]
+  }
+  if(data.event=="User added"){
+    playersList.push({
+      userId: data.userId,
+          player: new Sprite({
+            resource: resources.images.hero,
+            frameSize: new Vector2(32, 32),
+            hFrames: 3,
+            vFrames: 8,
+            frame: 1,
+          }),
+          userPosition:data.userPosition
+    })
+  }
+  if(data.event=== "userLeft"){
+   const playersLeft= playersList.findIndex(findingPLayerLeft)
+   function findingPLayerLeft(user){
+    return user.userId==data.userId
+   }
+   if(playersLeft==-1){
+    playersList.pop()
+   }else{
+    playersList.splice(playersLeft,1)
+   }
+  }
 
 function update() {
   const positionData = {
@@ -109,9 +128,15 @@ function draw() {
   if (hero != null) {
     hero.character.drawImage(ctx, heroPosX, heroPosY);
   }
+ if(playersList&&playersList!=[]&&playersList[1]!=undefined){
+  playersList.forEach((user)=>{
+  
+    user.player.drawImage(ctx,user.userPosition.x,user.userPosition.y)
+  })
+ }
   shadow.drawImage(ctx, heroPosX, heroPosY);
 }
-function addCurrentUserPlayer(userId) {
+function addCurrentUserPlayer(userId,userPosition) {
   hero = {
     character: new Sprite({
       resource: resources.images.hero,
@@ -122,8 +147,17 @@ function addCurrentUserPlayer(userId) {
     }),
     userId: userId,
   };
-  playersList.push({ userId, player: hero.character });
+  playersList.push({ userId, player: hero.character,userPosition });
 }
 
 const gameLoop = new GameLoop(update, draw);
 gameLoop.start();
+
+};
+socket.onclose = function (){
+  playersList.filter((user)=>{
+    user.userId!=data.userId
+  })
+}
+
+
