@@ -41,7 +41,7 @@ socket.onopen = function () {
 };
 socket.onmessage = function (message) {
   const data = JSON.parse(message.data);
-  console.log(data);
+  console.log(data)
   if (data.event === "acknowledged") {
     addCurrentUserPlayer(data.data.userId, data.data.userPosition);
     if (data.playerList != []) {
@@ -67,7 +67,7 @@ socket.onmessage = function (message) {
       return user.userId == data.data.userId;
     }
     const movedPlayer = playersList.findIndex(findingWhichPlayerMoved);
-    playersList[movedPlayer];
+    playersList[movedPlayer].userPosition=data.data.userPosition;
   }
   if (data.event == "User added") {
     playersList.push({
@@ -119,7 +119,6 @@ socket.onmessage = function (message) {
       socket.send(JSON.stringify(positionData));
     }
   }
-
   function draw() {
     skySprite.drawImage(ctx, 0, 0);
     groundSprite.drawImage(ctx, 0, 0);
@@ -129,10 +128,13 @@ socket.onmessage = function (message) {
     if (hero != null) {
       hero.character.drawImage(ctx, heroPosX, heroPosY);
     }
-    if (playersList && playersList != [] && playersList[1] != undefined) {
+    if (playersList != [] && playersList[1] != undefined && data.userPosition!=undefined) {
       playersList.forEach((user) => {
-        if (playersList.player != hero.character) {
-          user.player.drawImage(ctx, user.userPosition.x, user.userPosition.y);
+        console.log(user)
+        if (user.player != hero.character) {
+          const x=user.userPosition.y+heroOffset.y
+          const y=user.userPosition.y+heroOffset.y
+          user.player.drawImage(ctx,x,y);
         }
       });
     }
